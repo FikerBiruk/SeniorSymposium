@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>2026 SMCS Senior Symposium</title>
+  <meta name="description" content="Schedule and project guide for the 2026 SMCS Senior Symposium — 58 senior research presentations, December 15 & 17." />
+  <meta name="theme-color" content="#1d3a6e" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Science, Mathematics &amp; Computer Science Magnet</p>
+      <h1>2026 SMCS Senior Symposium</h1>
+      <p class="hero-sub">
+        <span class="hero-stat"><strong id="stat-talks">58</strong> research presentations</span>
+        <span class="dot" aria-hidden="true">•</span>
+        <span>Tue, Dec 15 &amp; Thu, Dec 17</span>
+        <span class="dot" aria-hidden="true">•</span>
+        <span>Periods 2–6</span>
+      </p>
+    </div>
+  </header>
+
+  <div class="toolbar" id="toolbar">
+    <div class="wrap">
+      <div class="toolbar-row">
+        <label class="search">
+          <span class="visually-hidden">Search presentations</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.32 12.9l5.39 5.4-1.41 1.41-5.4-5.39A8 8 0 1 1 10 2zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
+          <input id="search" type="search" placeholder="Search name, title, keyword, or site (e.g. NIST, UMD, JHU APL)" autocomplete="off" />
+        </label>
+
+        <div class="view-toggle" role="tablist" aria-label="View">
+          <button role="tab" id="tab-schedule" class="view-btn" data-view="schedule" aria-selected="true">Schedule</button>
+          <button role="tab" id="tab-explore" class="view-btn" data-view="explore" aria-selected="false">Explore All</button>
+        </div>
+
+        <button id="mine-toggle" class="mine-toggle" aria-pressed="false" title="Show only talks you've starred">
+          <span class="star-icon" aria-hidden="true">★</span>
+          My Schedule <span class="count-badge" id="mine-count">0</span>
+        </button>
+      </div>
+
+      <div class="filters" id="filters">
+        <div class="filter-group" data-key="day"><span class="filter-label">Day</span><div class="pills"></div></div>
+        <div class="filter-group" data-key="period"><span class="filter-label">Period</span><div class="pills"></div></div>
+        <div class="filter-group" data-key="room"><span class="filter-label">Room</span><div class="pills"></div></div>
+        <details class="more-filters" id="more-filters">
+          <summary>Topic, technology &amp; application filters <span class="count-badge" id="more-count" hidden>0</span></summary>
+          <div class="filter-group" data-key="topic"><span class="filter-label">Topic</span><div class="pills"></div></div>
+          <div class="filter-group" data-key="tech"><span class="filter-label">Technology</span><div class="pills"></div></div>
+          <div class="filter-group" data-key="domain"><span class="filter-label">Application</span><div class="pills"></div></div>
+        </details>
+      </div>
+
+      <div class="result-bar">
+        <span id="result-count" aria-live="polite"></span>
+        <button id="clear-filters" class="link-btn" hidden>Clear all filters</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="main" class="wrap">
+    <section id="view-schedule" aria-labelledby="tab-schedule"></section>
+    <section id="view-explore" aria-labelledby="tab-explore" hidden>
+      <div class="grid" id="grid"></div>
+    </section>
+    <div id="empty" class="empty" hidden>
+      <p class="empty-title">No presentations match.</p>
+      <p id="empty-hint">Try a different search or clear some filters.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Starred talks are saved only on this device, in this browser.</p>
+      <p>2026 SMCS Senior Symposium · Organized by the SMCS Junior Committee</p>
+    </div>
+  </footer>
+
+  <dialog id="modal" class="modal" aria-labelledby="modal-title">
+    <div class="modal-inner" id="modal-body"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

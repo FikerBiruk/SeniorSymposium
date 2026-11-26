@@ -1,0 +1,15 @@
+# IDE files
+.idea/
+*.iml
+
+# Raw symposium data: contains student emails, IDs and internal notes.
+# NEVER commit these.
+symposium_data.csv
+*.csv
+*.xlsx
+*.xls
+*.pdf
+
+# OS junk
+.DS_Store
+Thumbs.db
