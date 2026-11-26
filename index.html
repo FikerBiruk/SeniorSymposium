@@ -26,44 +26,51 @@
     </div>
   </header>
 
-  <div class="toolbar" id="toolbar">
+  <div class="controls" id="toolbar">
     <div class="wrap">
       <div class="toolbar-row">
         <label class="search">
           <span class="visually-hidden">Search presentations</span>
           <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.32 12.9l5.39 5.4-1.41 1.41-5.4-5.39A8 8 0 1 1 10 2zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
-          <input id="search" type="search" placeholder="Search name, title, keyword, or site (e.g. NIST, UMD, JHU APL)" autocomplete="off" />
+          <input id="search" type="search" placeholder="Search talks" autocomplete="off" />
         </label>
 
-        <div class="view-toggle" role="tablist" aria-label="View">
-          <button role="tab" id="tab-schedule" class="view-btn" data-view="schedule" aria-selected="true">Schedule</button>
-          <button role="tab" id="tab-explore" class="view-btn" data-view="explore" aria-selected="false">Explore All</button>
-        </div>
+        <button id="filters-toggle" class="chip-btn" aria-expanded="false" aria-controls="filters">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5h18v2H3zm3 6h12v2H6zm4 6h4v2h-4z"/></svg>
+          Filters <span class="count-badge" id="filter-count" hidden>0</span>
+        </button>
 
-        <button id="mine-toggle" class="mine-toggle" aria-pressed="false" title="Show only talks you've starred">
+        <button id="mine-toggle" class="chip-btn mine-toggle" aria-pressed="false" title="Show only talks you've starred">
           <span class="star-icon" aria-hidden="true">★</span>
-          My Schedule <span class="count-badge" id="mine-count">0</span>
+          <span class="mine-label">My Schedule</span> <span class="count-badge" id="mine-count">0</span>
         </button>
       </div>
 
-      <div class="filters" id="filters">
-        <div class="filter-group" data-key="day"><span class="filter-label">Day</span><div class="pills"></div></div>
+      <div class="filters" id="filters" hidden>
+        <div class="filter-group" data-key="day" data-explore-only><span class="filter-label">Day</span><div class="pills"></div></div>
         <div class="filter-group" data-key="period"><span class="filter-label">Period</span><div class="pills"></div></div>
         <div class="filter-group" data-key="room"><span class="filter-label">Room</span><div class="pills"></div></div>
-        <details class="more-filters" id="more-filters">
-          <summary>Topic, technology &amp; application filters <span class="count-badge" id="more-count" hidden>0</span></summary>
-          <div class="filter-group" data-key="topic"><span class="filter-label">Topic</span><div class="pills"></div></div>
-          <div class="filter-group" data-key="tech"><span class="filter-label">Technology</span><div class="pills"></div></div>
-          <div class="filter-group" data-key="domain"><span class="filter-label">Application</span><div class="pills"></div></div>
-        </details>
+        <div class="filter-group" data-key="topic"><span class="filter-label">Topic</span><div class="pills"></div></div>
+        <div class="filter-group" data-key="tech"><span class="filter-label">Technology</span><div class="pills"></div></div>
+        <div class="filter-group" data-key="domain"><span class="filter-label">Application</span><div class="pills"></div></div>
       </div>
 
       <div class="result-bar">
-        <span id="result-count" aria-live="polite"></span>
-        <button id="clear-filters" class="link-btn" hidden>Clear all filters</button>
+        <div class="view-toggle" role="tablist" aria-label="View">
+          <button role="tab" id="tab-schedule" class="view-btn" data-view="schedule" aria-selected="true">Schedule</button>
+          <button role="tab" id="tab-explore" class="view-btn" data-view="explore" aria-selected="false">All Projects</button>
+        </div>
+        <span class="result-meta">
+          <span id="result-count" aria-live="polite"></span>
+          <button id="clear-filters" class="link-btn" hidden>Clear</button>
+        </span>
       </div>
     </div>
   </div>
+
+  <nav class="day-bar" id="day-bar" aria-label="Symposium day">
+    <div class="wrap day-tabs" role="tablist"></div>
+  </nav>
 
   <main id="main" class="wrap">
     <section id="view-schedule" aria-labelledby="tab-schedule"></section>

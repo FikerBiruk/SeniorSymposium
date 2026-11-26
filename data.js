@@ -7,14 +7,14 @@
 const SYMPOSIUM = {
   title: "2026 SMCS Senior Symposium",
   days: {
-    1: { label: "Tuesday, Dec 15", short: "Dec 15", weekday: "Tue" },
-    2: { label: "Thursday, Dec 17", short: "Dec 17", weekday: "Thu" },
+    1: { label: "Tuesday, Dec 15", short: "Dec 15", weekday: "Tue", date: "2026-12-15" },
+    2: { label: "Thursday, Dec 17", short: "Dec 17", weekday: "Thu", date: "2026-12-17" },
   },
   periods: [2, 3, 4, 5, 6],
   rooms: {
-    "2614": { label: "Room 2614", host: "Mr. Yu" },
-    "2620": { label: "Room 2620", host: "Mrs. Smedberg" },
-    hub: { label: "SMCS Hub", host: "" },
+    "2614": { label: "Room 2614", short: "2614", host: "Mr. Yu" },
+    "2620": { label: "Room 2620", short: "2620", host: "Mrs. Smedberg" },
+    hub: { label: "SMCS Hub", short: "Hub", host: "" },
   },
   roomOrder: ["2614", "2620", "hub"],
 

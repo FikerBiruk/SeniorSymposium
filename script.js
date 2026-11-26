@@ -32,9 +32,26 @@
     [/Carnegie Mellon|CMU/, "cmu carnegie mellon"],
   ];
 
+  const DAY_KEYS = Object.keys(D.days);
+  const PILL_LIMIT = 4; // filter rows longer than this collapse behind "+N more"
+
+  // Open on the most recent symposium day that has started (local time), else Day 1.
+  function autoDay() {
+    const now = new Date();
+    const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+    let pick = DAY_KEYS[0];
+    DAY_KEYS.forEach((k) => {
+      if (D.days[k].date && D.days[k].date <= today) pick = k;
+    });
+    return pick;
+  }
+
   // ───────── State ─────────
   const state = {
     view: "schedule",
+    day: autoDay(),
+    filtersOpen: false,
+    expanded: new Set(),
     q: "",
     mine: false,
     filters: { day: new Set(), period: new Set(), room: new Set(), topic: new Set(), tech: new Set(), domain: new Set() },
@@ -88,8 +105,10 @@
   // ───────── Filtering ─────────
   function slotMatches(s) {
     const f = state.filters;
+    // The Day filter only applies in the All Projects view; the schedule uses the day tabs.
+    const useDay = state.view === "explore" && f.day.size;
     return (
-      (!f.day.size || f.day.has(String(s.day))) &&
+      (!useDay || f.day.has(String(s.day))) &&
       (!f.period.size || f.period.has(String(s.period))) &&
       (!f.room.size || f.room.has(s.room))
     );
@@ -111,8 +130,12 @@
   }
 
   function activeFilterCount() {
-    return Object.values(state.filters).reduce((n, s) => n + s.size, 0);
+    return Object.entries(state.filters).reduce(
+      (n, [k, s]) => n + (k === "day" && state.view !== "explore" ? 0 : s.size),
+      0
+    );
   }
+  const isFiltering = () => activeFilterCount() > 0 || !!state.q || state.mine;
 
   // ───────── Filter pills ─────────
   const FILTER_OPTIONS = {
@@ -131,25 +154,68 @@
     document.querySelectorAll(".filter-group").forEach((group) => {
       const key = group.dataset.key;
       const wrap = $(".pills", group);
-      wrap.innerHTML = FILTER_OPTIONS[key]
-        .map(
-          (o) =>
-            `<button type="button" class="pill" data-key="${key}" data-value="${esc(o.value)}" aria-pressed="false">` +
-            (o.color ? `<span class="swatch" style="background:${o.color}"></span>` : "") +
-            `${esc(o.label)}</button>`
-        )
-        .join("");
+      const opts = FILTER_OPTIONS[key];
+      const collapsible = opts.length > PILL_LIMIT + 1;
+      wrap.innerHTML =
+        opts
+          .map(
+            (o, i) =>
+              `<button type="button" class="pill${collapsible && i >= PILL_LIMIT ? " extra" : ""}" data-key="${key}" data-value="${esc(o.value)}" aria-pressed="false">` +
+              (o.color ? `<span class="swatch" style="background:${o.color}"></span>` : "") +
+              `${esc(o.label)}</button>`
+          )
+          .join("") +
+        (collapsible ? `<button type="button" class="pill more-btn" data-more="${key}"></button>` : "");
     });
   }
 
   function syncPills() {
-    document.querySelectorAll(".pill").forEach((b) => {
-      b.setAttribute("aria-pressed", state.filters[b.dataset.key].has(b.dataset.value) ? "true" : "false");
+    document.querySelectorAll(".filter-group").forEach((group) => {
+      const key = group.dataset.key;
+      const open = state.expanded.has(key);
+      group.hidden = group.hasAttribute("data-explore-only") && state.view !== "explore";
+      let hiddenCount = 0;
+      group.querySelectorAll(".pill[data-value]").forEach((b) => {
+        const on = state.filters[key].has(b.dataset.value);
+        b.setAttribute("aria-pressed", String(on));
+        // Collapsed rows still show any selected option.
+        const hide = b.classList.contains("extra") && !open && !on;
+        b.hidden = hide;
+        if (hide) hiddenCount++;
+      });
+      const more = $(".more-btn", group);
+      if (more) {
+        more.hidden = !open && hiddenCount === 0;
+        more.textContent = open ? "Show less" : `+${hiddenCount} more`;
+        more.setAttribute("aria-expanded", String(open));
+      }
     });
-    const more = state.filters.topic.size + state.filters.tech.size + state.filters.domain.size;
-    const badge = $("#more-count");
-    badge.hidden = more === 0;
-    badge.textContent = more;
+    const n = activeFilterCount();
+    const badge = $("#filter-count");
+    badge.hidden = n === 0;
+    badge.textContent = n;
+    $("#filters").hidden = !state.filtersOpen;
+    $("#filters-toggle").setAttribute("aria-expanded", String(state.filtersOpen));
+  }
+
+  // ───────── Day tabs ─────────
+  function dayMatchCount(visible, dayKey) {
+    return visible.filter((p) => p.slots.some((s) => String(s.day) === dayKey && slotMatches(s))).length;
+  }
+
+  function renderDayTabs(visible) {
+    const filtering = isFiltering();
+    $("#day-bar .day-tabs").innerHTML = DAY_KEYS.map((k) => {
+      const d = D.days[k];
+      const n = dayMatchCount(visible, k);
+      const badge = filtering
+        ? ` · <span class="day-count${n ? "" : " none"}">${n ? `${n} match${n === 1 ? "" : "es"}` : "no matches"}</span>`
+        : "";
+      return `<button type="button" role="tab" class="day-tab" data-day="${k}" aria-selected="${state.day === k}">
+        <span class="day-tab-date">${esc(d.weekday)}, ${esc(d.short)}</span>
+        <span class="day-tab-sub">Day ${k}${badge}</span>
+      </button>`;
+    }).join("");
   }
 
   // ───────── Rendering: shared pieces ─────────
@@ -174,11 +240,19 @@
     });
 
     let html = "";
-    Object.keys(D.days).forEach((dayKey) => {
+    [state.day].forEach((dayKey) => {
       const day = idx[dayKey];
-      if (!day) return;
-      html += `<section class="day-section"><div class="day-heading"><h2>${esc(D.days[dayKey].label)}</h2>
-        <span class="day-tag">Day ${dayKey}</span></div>`;
+      if (!day) {
+        const other = DAY_KEYS.find((k) => k !== dayKey && idx[k]);
+        html +=
+          `<div class="empty"><p class="empty-title">No matches on ${esc(D.days[dayKey].label)}.</p>` +
+          (other
+            ? `<p><button type="button" class="link-btn" data-day="${other}">See ${dayMatchCount(visible, other)} on ${esc(D.days[other].label)} →</button></p>`
+            : "") +
+          `</div>`;
+        return;
+      }
+      html += `<section class="day-section"><h2 class="visually-hidden">${esc(D.days[dayKey].label)}</h2>`;
       D.periods.forEach((period) => {
         const rooms = day[period];
         if (!rooms) return;
@@ -203,6 +277,7 @@
           talks.forEach(({ p, s }) => {
             const starred = state.starred.has(p.id);
             html += `<div class="talk ${starred ? "is-starred" : ""}" style="--topic:${p._color}">
+              <span class="talk-room" aria-hidden="true">${esc(info.short || info.label)}</span>
               <button type="button" class="talk-main" data-open="${p.id}">
                 <span class="talk-order">${s.order === 1 ? "1st" : "2nd"} talk</span>
                 <span class="talk-name">${esc(p.name)}</span>
@@ -248,7 +323,11 @@
 
     $("#view-schedule").hidden = !isSchedule || !visible.length;
     $("#view-explore").hidden = isSchedule || !visible.length;
-    if (isSchedule) renderSchedule(visible);
+    $("#day-bar").hidden = !isSchedule;
+    if (isSchedule) {
+      renderDayTabs(visible);
+      renderSchedule(visible);
+    }
     else renderGrid(visible);
 
     // Empty state
@@ -264,8 +343,8 @@
     // Counts
     const n = visible.length;
     $("#result-count").textContent =
-      n === PROJECTS.length && !state.mine ? `Showing all ${n} presentations` : `Showing ${n} of ${PROJECTS.length} presentations`;
-    $("#clear-filters").hidden = !(activeFilterCount() || state.q || state.mine);
+      n === PROJECTS.length && !state.mine ? `${n} presentations` : `${n} of ${PROJECTS.length} match`;
+    $("#clear-filters").hidden = !isFiltering();
     $("#mine-count").textContent = state.starred.size;
     $("#mine-toggle").setAttribute("aria-pressed", String(state.mine));
     document.querySelectorAll(".view-btn").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === state.view)));
@@ -416,10 +495,32 @@
       $("#search").value = "";
       state.filters[key].add(value);
       state.view = "explore";
-      $("#more-filters").open = true;
+      state.filtersOpen = true;
       closeModal();
       render();
       $("#toolbar").scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    const dayBtn = e.target.closest("[data-day]");
+    if (dayBtn) {
+      state.day = dayBtn.dataset.day;
+      render();
+      // If scrolled into the schedule, jump back to the top of the newly selected day.
+      const barH = $("#day-bar").offsetHeight;
+      const top = $("#main").getBoundingClientRect().top;
+      if (top < barH) window.scrollTo({ top: window.scrollY + top - barH, behavior: "smooth" });
+      return;
+    }
+    const more = e.target.closest("[data-more]");
+    if (more) {
+      const k = more.dataset.more;
+      state.expanded.has(k) ? state.expanded.delete(k) : state.expanded.add(k);
+      syncPills();
+      return;
+    }
+    if (e.target.closest("#filters-toggle")) {
+      state.filtersOpen = !state.filtersOpen;
+      syncPills();
       return;
     }
     const pill = e.target.closest(".pill");
