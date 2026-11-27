@@ -87,7 +87,7 @@
   }
   function slotText(s, withDay = true) {
     const day = D.days[s.day];
-    return (withDay ? `${day.weekday}, ${day.short} · ` : "") + `Period ${s.period} · ${roomLabel(s.room)}`;
+    return (withDay ? `${day.weekday}, ${day.short}, ` : "") + `period ${s.period}, ${roomLabel(s.room)}`;
   }
 
   // Precompute search text for each project.
@@ -145,7 +145,7 @@
       value: k,
       label: D.rooms[k].host ? `${D.rooms[k].label} (${D.rooms[k].host})` : D.rooms[k].label,
     })),
-    topic: D.taxonomy.topic.map((t) => ({ value: t, label: t, color: TOPIC_COLOR[t] })),
+    topic: D.taxonomy.topic.map((t) => ({ value: t, label: t })),
     tech: D.taxonomy.tech.map((t) => ({ value: t, label: t })),
     domain: D.taxonomy.domain.map((t) => ({ value: t, label: t })),
   };
@@ -209,7 +209,7 @@
       const d = D.days[k];
       const n = dayMatchCount(visible, k);
       const badge = filtering
-        ? ` · <span class="day-count${n ? "" : " none"}">${n ? `${n} match${n === 1 ? "" : "es"}` : "no matches"}</span>`
+        ? `, <span class="day-count${n ? "" : " none"}">${n ? `${n} match${n === 1 ? "" : "es"}` : "no matches"}</span>`
         : "";
       return `<button type="button" role="tab" class="day-tab" data-day="${k}" aria-selected="${state.day === k}">
         <span class="day-tab-date">${esc(d.weekday)}, ${esc(d.short)}</span>
@@ -247,7 +247,7 @@
         html +=
           `<div class="empty"><p class="empty-title">No matches on ${esc(D.days[dayKey].label)}.</p>` +
           (other
-            ? `<p><button type="button" class="link-btn" data-day="${other}">See ${dayMatchCount(visible, other)} on ${esc(D.days[other].label)} →</button></p>`
+            ? `<p><button type="button" class="link-btn" data-day="${other}">See ${dayMatchCount(visible, other)} on ${esc(D.days[other].label)}</button></p>`
             : "") +
           `</div>`;
         return;
@@ -263,7 +263,7 @@
         D.roomOrder.forEach((r) => (rooms[r] || []).forEach(({ p }) => state.starred.has(p.id) && starredRooms.add(r)));
         const conflict =
           starredRooms.size > 1
-            ? `<span class="conflict" title="You starred talks in different rooms during this period">⚠ Starred talks in ${starredRooms.size} rooms</span>`
+            ? `<span class="conflict" title="You starred talks in different rooms during this period">Your starred talks are in ${starredRooms.size} rooms</span>`
             : "";
 
         html += `<article class="period"><div class="period-head"><h3>Period ${period}</h3>${conflict}</div>
@@ -276,12 +276,12 @@
           if (!talks.length) html += `<div class="room-empty">No matching talks</div>`;
           talks.forEach(({ p, s }) => {
             const starred = state.starred.has(p.id);
-            html += `<div class="talk ${starred ? "is-starred" : ""}" style="--topic:${p._color}">
+            html += `<div class="talk ${starred ? "is-starred" : ""}">
               <span class="talk-room" aria-hidden="true">${esc(info.short || info.label)}</span>
               <button type="button" class="talk-main" data-open="${p.id}">
-                <span class="talk-order">${s.order === 1 ? "1st" : "2nd"} talk</span>
                 <span class="talk-name">${esc(p.name)}</span>
                 <span class="talk-title">${esc(p.title)}</span>
+                <span class="talk-topic">${esc(p.topic)}</span>
               </button>${starButton(p)}</div>`;
           });
           html += `</div>`;
@@ -298,14 +298,14 @@
     const sorted = [...visible].sort((a, b) => a.name.split(" ").slice(-1)[0].localeCompare(b.name.split(" ").slice(-1)[0]));
     $("#grid").innerHTML = sorted
       .map(
-        (p) => `<article class="card" style="--topic:${p._color}">
+        (p) => `<article class="card">
           <button type="button" class="card-open" data-open="${p.id}">
-            <span class="card-topic">${esc(p.topic)}</span>
             <h3 class="card-title">${esc(p.title)}</h3>
             <span class="card-name">${esc(p.name)}</span>
             <span class="card-org">${esc(p.org)}</span>
+            <span class="card-topic">${esc(p.topic)}</span>
             <span class="card-meta">
-              ${p.slots.map((s) => `<span class="chip slot">${esc(D.days[s.day].short)} · P${s.period} · ${esc(roomLabel(s.room))}</span>`).join("")}
+              ${p.slots.map((s) => `<span class="chip slot">${esc(D.days[s.day].weekday)} ${esc(D.days[s.day].short)}, period ${s.period}, ${esc(roomLabel(s.room))}</span>`).join("")}
               <span class="chip">${esc(p.tech)}</span>
               <span class="chip">${esc(p.domain)}</span>
             </span>
@@ -411,7 +411,7 @@
               ({ o, why }) => `<button type="button" class="related-item" style="--topic:${o._color}" data-open="${o.id}">
                 <span class="related-name">${esc(o.name)}</span>
                 <span class="related-title">${esc(o.title)}</span>
-                <span class="related-why">${esc(why.join(" · "))} — ${esc(o.slots.map((s) => slotText(s)).join(" / "))}</span>
+                <span class="related-why">Shares <em>${esc(why.join(", "))}</em>. ${esc(o.slots.map((s) => slotText(s)).join("; "))}</span>
               </button>`
             )
             .join("")}
@@ -462,7 +462,7 @@
       toast(`Removed ${p.name} from My Schedule`);
     } else {
       state.starred.add(id);
-      toast(`★ Added ${p.name} to My Schedule`);
+      toast(`Added ${p.name} to My Schedule`);
     }
     saveStarred();
     render();
